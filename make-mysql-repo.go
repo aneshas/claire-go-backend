@@ -8,70 +8,73 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-const (
-	DB     string = "claire"
-	DBUSER string = "root"
-	DBPASS string = "" // eg ":mypasswd"
-	DBHOST string = "mysql"
-)
-
-// Make mysql repository
+// MakeMysqlRepo mysql repository
 // Implements IMakeRepository interface
 type MakeMysqlRepo struct {
-	Db *sql.DB
+	*MysqlDb
 }
 
-func (r *MakeMysqlRepo) Init() {
-	connectionString := fmt.Sprintf("%s%s@tcp(%s:3306)/%s", DBUSER, DBPASS, DBHOST, DB)
+// Helper funcs
 
-	db, err := sql.Open("mysql", connectionString)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (r MakeMysqlRepo) Map(row *sql.Row) (make Make, err error) {
+	err = row.Scan(
+		&make.Id,
+		&make.Name,
+		&make.Description,
+		&make.Photo)
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	log.Println("Database connection established")
-
-	r.Db = db
+	return
 }
 
-func (r *MakeMysqlRepo) Deinit() {
-	r.Db.Close()
-}
-
-func (r MakeMysqlRepo) Get(id int) Make {
-	return Make{1, "foo", "bar", "photo"}
-}
-
-func (r MakeMysqlRepo) GetAll(limit int) (result []Make) {
-	query := fmt.Sprintf("select * from make limit %d", limit)
-
-	rows, err := r.Db.Query(query)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
+func (r MakeMysqlRepo) MapRows(rows *sql.Rows) (makes []Make, err error) {
 	make := Make{}
 
 	for rows.Next() {
-		rows.Scan(
+		err = rows.Scan(
 			&make.Id,
 			&make.Name,
 			&make.Description,
 			&make.Photo)
 
-		result = append(result, make)
+		if err != nil {
+			return
+		}
+
+		makes = append(makes, make)
 	}
 
 	return
 }
 
+// Database access funcs
+
+func (r MakeMysqlRepo) Get(id int) (make Make, err error) {
+	query := fmt.Sprintf("select * from make where id=%d", id)
+	row := r.Db.QueryRow(query)
+	make, err = r.Map(row)
+
+	return
+}
+
+func (r MakeMysqlRepo) GetAll(limit int) (result []Make, err error) {
+	query := fmt.Sprintf("select * from make limit %d", limit)
+	rows, err := r.Db.Query(query)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	result, err = r.MapRows(rows)
+
+	return
+}
+
 func (r MakeMysqlRepo) Query(query string) (makes []Make, err error) {
+	rows, err := r.Db.Query(query)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	makes, err = r.MapRows(rows)
+
 	return
 }

@@ -7,13 +7,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type MakeController struct {
+type ModelController struct {
 	BaseController
-	makeRepo IMakeRepository
+	modelRepo IModelRepository
 }
 
-func (mc MakeController) Index(rw http.ResponseWriter, request *http.Request) {
-	makes, err := mc.makeRepo.GetAll(2)
+func (mc ModelController) Index(rw http.ResponseWriter, request *http.Request) {
+	makes, err := mc.modelRepo.GetAll(2)
 
 	err = mc.Render(rw, makes, err)
 	if err != nil {
@@ -22,11 +22,11 @@ func (mc MakeController) Index(rw http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func (mc MakeController) View(rw http.ResponseWriter, request *http.Request) {
+func (mc ModelController) View(rw http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	id, _ := strconv.Atoi(params["id"])
 
-	make, err := mc.makeRepo.Get(id)
+	make, err := mc.modelRepo.Get(id)
 
 	mc.Render(rw, make, err)
 }

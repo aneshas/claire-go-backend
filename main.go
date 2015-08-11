@@ -8,7 +8,11 @@ import (
 )
 
 const (
-	PORT string = ":80"
+	PORT   string = ":80"
+	DB     string = "claire"
+	DBUSER string = "root"
+	DBPASS string = "" // eg ":mypasswd"
+	DBHOST string = "mysql"
 )
 
 func main() {
@@ -21,11 +25,18 @@ func main() {
 	}
 
 	// Instantiate repositories
-	makeRepo := MakeMysqlRepo{}
-	makeRepo.Init()
+	mysqlDb := MysqlDb{}
+	mysqlDb.Init()
+
+	makeRepo := MakeMysqlRepo{
+		MysqlDb: &mysqlDb,
+	}
+	modelRepo := ModelMysqlRepo{
+		MysqlDb: &mysqlDb,
+	}
 
 	defer func() {
-		makeRepo.Deinit()
+		mysqlDb.Deinit()
 	}()
 
 	// Instantiate application controllers
@@ -34,11 +45,25 @@ func main() {
 		makeRepo:       &makeRepo,
 	}
 
+	modelController := ModelController{
+		BaseController: baseController,
+		modelRepo:      &modelRepo,
+	}
+
 	// Setup routes
 	router := mux.NewRouter().StrictSlash(false)
 
 	// GET /api/make
 	router.HandleFunc("/api/make", makeController.Index).Methods("GET")
+
+	// GET /api/make/{id}
+	router.HandleFunc("/api/make/{id}", makeController.View).Methods("GET")
+
+	// GET /api/model
+	router.HandleFunc("/api/model", modelController.Index).Methods("GET")
+
+	// GET /api/model/{id}
+	router.HandleFunc("/api/model/{id}", modelController.View).Methods("GET")
 
 	log.Println("Listening on port 80...")
 	http.ListenAndServe(PORT, router)
