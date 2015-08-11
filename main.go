@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -10,24 +12,34 @@ const (
 )
 
 func main() {
-	// Instantiate JsonRenderer for our api
-	jsonRenderer := JsonRenderer{}
+	// Instantiate our JsonRenderer for our api
+	renderer := JsonRenderer{}
 
 	// Instantiate BaseController with our JsonRenderer
 	baseController := BaseController{
-		IRenderer: &jsonRenderer,
+		IRenderer: &renderer,
 	}
 
 	// Instantiate repositories
+	makeRepo := MakeMysqlRepo{}
+	makeRepo.Init()
+
+	defer func() {
+		makeRepo.Deinit()
+	}()
 
 	// Instantiate application controllers
 	makeController := MakeController{
 		BaseController: baseController,
+		makeRepo:       &makeRepo,
 	}
 
 	// Setup routes
-	http.HandleFunc("/", makeController.Index)
+	router := mux.NewRouter().StrictSlash(false)
 
-	fmt.Println("Listening on port 80...")
-	http.ListenAndServe(PORT, nil)
+	// GET /api/make
+	router.HandleFunc("/api/make", makeController.Index).Methods("GET")
+
+	log.Println("Listening on port 80...")
+	http.ListenAndServe(PORT, router)
 }
