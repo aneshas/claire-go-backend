@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	PORT   string = ":80"
-	DB     string = "claire"
-	DBUSER string = "root"
-	DBPASS string = "" // eg ":mypasswd"
-	DBHOST string = "mysql"
+	PORT         string = ":80"
+	MYSQL_DB     string = "claire"
+	MYSQL_DBUSER string = "root"
+	MYSQL_DBPASS string = "" // eg ":mypasswd"
+	MYSQL_DBHOST string = "mysql"
 )
 
 func main() {
@@ -36,6 +36,8 @@ func main() {
 	}
 
 	defer func() {
+		log.Println("Exiting...")
+		log.Println("Closing db connections...")
 		mysqlDb.Deinit()
 	}()
 
@@ -55,13 +57,11 @@ func main() {
 
 	// GET /api/make
 	router.HandleFunc("/api/make", makeController.Index).Methods("GET")
-
 	// GET /api/make/{id}
 	router.HandleFunc("/api/make/{id}", makeController.View).Methods("GET")
 
 	// GET /api/model
 	router.HandleFunc("/api/model", modelController.Index).Methods("GET")
-
 	// GET /api/model/{id}
 	router.HandleFunc("/api/model/{id}", modelController.View).Methods("GET")
 
