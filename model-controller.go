@@ -13,20 +13,16 @@ type ModelController struct {
 }
 
 func (mc ModelController) Index(rw http.ResponseWriter, request *http.Request) {
-	makes, err := mc.modelRepo.GetAll(2)
+	makes, err := mc.modelRepo.GetAll(MAX_MYSQL_RESULTS, nil)
 
-	err = mc.Render(rw, makes, err)
-	if err != nil {
-		// TODO Implement as error method on base controller
-		rw.Write([]byte("Internal server error"))
-	}
+	mc.Render(rw, makes, err)
 }
 
 func (mc ModelController) View(rw http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	id, _ := strconv.Atoi(params["id"])
 
-	make, err := mc.modelRepo.Get(id)
+	make, err := mc.modelRepo.Get(id, nil)
 
 	mc.Render(rw, make, err)
 }

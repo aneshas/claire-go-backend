@@ -9,7 +9,7 @@ import (
 
 const (
 	PORT         string = ":80"
-	MYSQL_DB     string = "claire"
+	MYSQL_DB     string = "/claire"
 	MYSQL_DBUSER string = "root"
 	MYSQL_DBPASS string = "" // eg ":mypasswd"
 	MYSQL_DBHOST string = "mysql"
@@ -34,10 +34,11 @@ func main() {
 	modelRepo := ModelMysqlRepo{
 		MysqlDb: &mysqlDb,
 	}
+	tagRepo := TagMysqlRepo{
+		MysqlDb: &mysqlDb,
+	}
 
 	defer func() {
-		log.Println("Exiting...")
-		log.Println("Closing db connections...")
 		mysqlDb.Deinit()
 	}()
 
@@ -46,10 +47,13 @@ func main() {
 		BaseController: baseController,
 		makeRepo:       &makeRepo,
 	}
-
 	modelController := ModelController{
 		BaseController: baseController,
 		modelRepo:      &modelRepo,
+	}
+	tagController := TagController{
+		BaseController: baseController,
+		tagRepo:        &tagRepo,
 	}
 
 	// Setup routes
@@ -64,6 +68,11 @@ func main() {
 	router.HandleFunc("/api/model", modelController.Index).Methods("GET")
 	// GET /api/model/{id}
 	router.HandleFunc("/api/model/{id}", modelController.View).Methods("GET")
+
+	// GET /api/tag
+	router.HandleFunc("/api/tag", tagController.Index).Methods("GET")
+	// GET /api/tag/{id}
+	router.HandleFunc("/api/tag/{id}", tagController.View).Methods("GET")
 
 	log.Println("Listening on port 80...")
 	http.ListenAndServe(PORT, router)

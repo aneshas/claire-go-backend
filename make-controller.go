@@ -13,20 +13,19 @@ type MakeController struct {
 }
 
 func (mc MakeController) Index(rw http.ResponseWriter, request *http.Request) {
-	makes, err := mc.makeRepo.GetAll(2)
+	makes, err := mc.makeRepo.GetAll(MAX_MYSQL_RESULTS, nil)
 
 	err = mc.Render(rw, makes, err)
-	if err != nil {
-		// TODO Implement as error method on base controller
-		rw.Write([]byte("Internal server error"))
-	}
 }
 
 func (mc MakeController) View(rw http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	id, _ := strconv.Atoi(params["id"])
 
-	make, err := mc.makeRepo.Get(id)
+	queryParams := request.URL.Query()
+	join := queryParams["join"]
+
+	make, err := mc.makeRepo.Get(id, join)
 
 	mc.Render(rw, make, err)
 }

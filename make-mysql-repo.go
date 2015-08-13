@@ -1,11 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/kisielk/sqlstruct"
 	"log"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // MakeMysqlRepo mysql repository
@@ -14,56 +12,44 @@ type MakeMysqlRepo struct {
 	*MysqlDb
 }
 
-// Helper funcs
+func (r MakeMysqlRepo) Get(id int, joins []string) (make Make, err error) {
+	entities := "make"
 
-func (r MakeMysqlRepo) Map(row *sql.Row) (make Make, err error) {
-	err = row.Scan(
-		&make.Id,
-		&make.Name,
-		&make.Description,
-		&make.Photo)
-
-	return
-}
-
-func (r MakeMysqlRepo) MapRows(rows *sql.Rows) (makes []Make, err error) {
-	make := Make{}
-
-	for rows.Next() {
-		err = rows.Scan(
-			&make.Id,
-			&make.Name,
-			&make.Description,
-			&make.Photo)
-
-		if err != nil {
-			return
-		}
-
-		makes = append(makes, make)
+	query := fmt.Sprintf("select * from %s where id=%d", entities, id)
+	rows, err := r.Db.Query(query)
+	if err != nil {
+		return
 	}
 
-	return
-}
+	if !rows.Next() {
+		err = ErrNoResults
+		return
+	}
+	sqlstruct.Scan(&make, rows)
 
-// Database access funcs
-
-func (r MakeMysqlRepo) Get(id int) (make Make, err error) {
-	query := fmt.Sprintf("select * from make where id=%d", id)
-	row := r.Db.QueryRow(query)
-	make, err = r.Map(row)
+	rows.Close()
 
 	return
 }
 
-func (r MakeMysqlRepo) GetAll(limit int) (result []Make, err error) {
+func (r MakeMysqlRepo) GetAll(limit int, joins []string) (result []Make, err error) {
+	if limit == 0 {
+		limit = MAX_MYSQL_RESULTS
+	}
+
 	query := fmt.Sprintf("select * from make limit %d", limit)
 	rows, err := r.Db.Query(query)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	result, err = r.MapRows(rows)
+
+	make := Make{}
+	for rows.Next() {
+		err = sqlstruct.Scan(&make, rows)
+		result = append(result, make)
+	}
+	rows.Close()
 
 	return
 }
@@ -74,7 +60,13 @@ func (r MakeMysqlRepo) Query(query string) (makes []Make, err error) {
 		log.Println(err)
 		return
 	}
-	makes, err = r.MapRows(rows)
+
+	make := Make{}
+	for rows.Next() {
+		err = sqlstruct.Scan(&make, rows)
+		makes = append(makes, make)
+	}
+	rows.Close()
 
 	return
 }

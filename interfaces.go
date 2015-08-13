@@ -25,11 +25,13 @@ type (
 	IMakeRepository interface {
 		// Get returns a single Make struct object
 		// with specified id or err on no results
-		Get(int) (Make, error)
+		// Provide associated models as second param
+		Get(int, []string) (Make, error)
 
 		// GetAll returns all Make objects
 		// Accepsts an int for limit
-		GetAll(int) ([]Make, error)
+		// Provide associated models as second param
+		GetAll(int, []string) ([]Make, error)
 
 		// Query returns a slice of Make objects
 		// with custom string query and an error
@@ -42,14 +44,35 @@ type (
 	IModelRepository interface {
 		// Get returns a single Model struct object
 		// with specified id or err on no results
-		Get(int) (Model, error)
+		// Provide associated models as second param
+		Get(int, []string) (Model, error)
 
 		// GetAll returns all Model objects
 		// Accepsts an int for limit
-		GetAll(int) ([]Model, error)
+		// Provide associated models as second param
+		GetAll(int, []string) ([]Model, error)
 
 		// Query returns a slice of Model objects
 		// with custom string query and an error
 		Query(string) ([]Model, error)
+	}
+
+	// ITagRepository interface
+	// Enables hotswapping between database providers
+	// if they implement the interface
+	ITagRepository interface {
+		// Get returns a single Tag struct object
+		// with specified id or err on no results
+		// Provide associated models as second param
+		Get(int, []string) (Tag, error)
+
+		// GetAll returns all Tag objects
+		// Accepsts an int for limit
+		// Provide associated models as second param
+		GetAll(int, []string) ([]Tag, error)
+
+		// Query returns a slice of Tag objects
+		// with custom string query and an error
+		Query(string) ([]Tag, error)
 	}
 )

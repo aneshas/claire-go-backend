@@ -15,7 +15,7 @@ type (
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Photo       string `json:"photo"`
-		MakeId      string `json:"make_id"`
+		MakeId      uint   `json:"make_id" sql:"make_id"`
 	}
 
 	// Car tags
